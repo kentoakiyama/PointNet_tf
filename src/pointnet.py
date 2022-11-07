@@ -148,10 +148,10 @@ class PointNetSeg(tf.keras.Model):
         out = tf.tile(out, [1, self.num_points, 1])
         out = tf.concat([out, f_out], axis=2)
 
-        out = self.activation6(self.bn6(self.conv6(input)))
-        out = self.activation7(self.bn7(self.conv7(input)))
-        out = self.activation8(self.bn8(self.conv8(input)))
+        out = self.activation6(self.bn6(self.conv6(out)))
+        out = self.activation7(self.bn7(self.conv7(out)))
+        out = self.activation8(self.bn8(self.conv8(out)))
 
-        out = self.activation9(self.bn9(self.conv9(input)))
+        out = self.activation9(self.bn9(self.conv9(out)))
     
         return self.softmax(self.conv10(out))
