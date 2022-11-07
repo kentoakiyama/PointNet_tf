@@ -3,9 +3,15 @@ import tensorflow as tf
 from src.tnet import TNet
 
 
-class PointNetCls(tf.keras.Model):
-    def __init__(self, num_points: int, num_classes: int, activation: str):
-        super(PointNetCls, self).__init__()
+class PointNet(tf.keras.Model):
+    def __init__(self, num_points: int, num_out: int, activation: str='relu', out_activation: str='softmax'):
+        '''
+        num_points: number of nodes
+        num_out: number of output columns (if 10 class classification, num_out => 10)
+        activation: ['relu', 'elu', 'selu', 'sigmoid', 'hard_sigmoid', 'softplux', 'softmax', 'tanh', 'linear']
+        out_activation: ['sigmoid', 'softmax', 'linear'] if classification task, out_activation => ['sigmoid', 'softmax'], elif regression => 'linear'
+        '''
+        super(PointNet, self).__init__()
 
         self.input_tnet = TNet(num_points=num_points, k=3, activation=activation)
         self.feature_tnet = TNet(num_points=num_points, k=64, activation=activation)
@@ -18,7 +24,7 @@ class PointNetCls(tf.keras.Model):
 
         self.nonlinear1 = tf.keras.layers.Dense(512)
         self.nonlinear2 = tf.keras.layers.Dense(256)
-        self.nonlinear3 = tf.keras.layers.Dense(num_classes)
+        self.nonlinear3 = tf.keras.layers.Dense(num_out)
 
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.bn2 = tf.keras.layers.BatchNormalization()
@@ -36,7 +42,7 @@ class PointNetCls(tf.keras.Model):
         self.activation6 = tf.keras.layers.Activation(activation)
         self.activation7 = tf.keras.layers.Activation(activation)
 
-        self.softmax = tf.keras.layers.Activation('softmax')
+        self.softmax = tf.keras.layers.Activation(out_activation)
 
         self.maxpooling1 = tf.keras.layers.MaxPooling1D(num_points)
 
@@ -67,7 +73,13 @@ class PointNetCls(tf.keras.Model):
 
 
 class PointNetSeg(tf.keras.Model):
-    def __init__(self, num_points: int, num_classes: int, activation: str):
+    def __init__(self, num_points: int, num_out: int, activation: str='relu', out_activation: str='softmax'):
+        '''
+        num_points: number of nodes
+        num_out: number of output columns (if 10 class classification, num_out => 10)
+        activation: ['relu', 'elu', 'selu', 'sigmoid', 'hard_sigmoid', 'softplux', 'softmax', 'tanh', 'linear']
+        out_activation: ['sigmoid', 'softmax', 'linear']
+        '''
         super(PointNetSeg, self).__init__()
 
         self.num_points = num_points
@@ -84,7 +96,7 @@ class PointNetSeg(tf.keras.Model):
         self.conv7 = tf.keras.layers.Conv1D(filters=256, kernel_size=1, strides=1)
         self.conv8 = tf.keras.layers.Conv1D(filters=128, kernel_size=1, strides=1)
         self.conv9 = tf.keras.layers.Conv1D(filters=128, kernel_size=1, strides=1)
-        self.conv10 = tf.keras.layers.Conv1D(filters=num_classes, kernel_size=1, strides=1)
+        self.conv10 = tf.keras.layers.Conv1D(filters=num_out, kernel_size=1, strides=1)
 
         self.nonlinear1 = tf.keras.layers.Dense(512)
         self.nonlinear2 = tf.keras.layers.Dense(256)
@@ -109,7 +121,7 @@ class PointNetSeg(tf.keras.Model):
         self.activation8 = tf.keras.layers.Activation(activation)
         self.activation9 = tf.keras.layers.Activation(activation)
 
-        self.softmax = tf.keras.layers.Activation('softmax')
+        self.softmax = tf.keras.layers.Activation(out_activation)
 
         self.maxpooling1 = tf.keras.layers.MaxPooling1D(num_points)
 
