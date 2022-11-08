@@ -2,6 +2,10 @@
 
 The network can handle the point cloud data such as mesh data. Prior to the publication of this paper (2017), many researchers transform such data to 3D voxel grid or collections of images.
 
+The network architecture is shown below.
+
+![network_architecture](/images/network_architecture.png)
+
 ## Features
 
 To handle the point cloud data, there are three main features,
