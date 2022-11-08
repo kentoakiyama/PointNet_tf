@@ -24,7 +24,8 @@ history = model.fit(x=train_gen,
                     steps_per_epoch=len(train_gen),
                     validation_data=val_gen,
                     validation_steps=len(val_gen))
-
+```
+```python
 # segmentation task
 model = PointNetSeg(num_points, num_out, activation, out_activation, batchnormalization=True)
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
