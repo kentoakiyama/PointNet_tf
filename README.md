@@ -66,5 +66,5 @@ comming soon ...
 - TensorFlow (created in tensorflow ver. 2.9.1)
 
 ## Reference
-- [R. Q. Charles, et al.: PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation, 2017](https://arxiv.org/pdf/1612.00593.pdf)
+- [R. Q. Charles, et al.: PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation, 2016](https://arxiv.org/pdf/1612.00593.pdf)
 - [R. Q. Charles, et al.: PointNet++: Deep Hierarchical Feature Learning on Point Sets in a Metric Space, 2017](https://arxiv.org/pdf/1706.02413.pdf)
