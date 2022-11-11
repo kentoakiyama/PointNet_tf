@@ -1,7 +1,8 @@
 import tensorflow as tf
 
-from src.tnet import TNet
-from src.layers import NonLinear
+from pointnet.tnet import TNet
+from utils.layers import NonLinear
+
 
 class PointNet(tf.keras.Model):
     def __init__(self, num_points: int, num_out: int, activation: str='relu', out_activation: str='softmax', batchnormalization:bool=True):

@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from src.initializer import EyeInitializer
-from src.layers import NonLinear
+from utils.initializer import EyeInitializer
+from utils.layers import NonLinear
 
 class TNet(tf.keras.Model):
     def __init__(self, num_points: int, k: int, activation='relu', batchnormalization: bool=True):
