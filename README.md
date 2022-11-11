@@ -1,10 +1,11 @@
-# PointNet
+# PointNet, PointNet++
 
 The network can handle the point cloud data such as mesh data. Prior to the publication of this paper (2017), many researchers transform such data to 3D voxel grid or collections of images.
 
 The network architecture is shown below.
 
-![network_architecture](/images/network_architecture.png)
+![network_architecture](/images/pointnet_network_architecture.png)
+![network_architecture](/images/pointnet2_network_architecture.png)
 
 ## Features
 
@@ -17,6 +18,8 @@ To handle the point cloud data, there are three main features,
 The example for usage is shown below.
 
 There are two models, one is for classification and the other is for segmentation task. 
+
+### PointNet
 
 ```python
 # classification task
@@ -50,6 +53,10 @@ You have five options for training.
 - batchnormalization: True or False (default: True)
 
 
+### PointNet++
+
+comming soon ...
+
 ## Validation
 
 comming soon ...
@@ -59,4 +66,5 @@ comming soon ...
 - TensorFlow (created in tensorflow ver. 2.9.1)
 
 ## Reference
-- [R. Q. Charles, et al., PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation, 2017](https://arxiv.org/pdf/1612.00593.pdf)
+- [R. Q. Charles, et al.: PointNet: Deep Learning on Point Sets for 3D Classification and Segmentation, 2017](https://arxiv.org/pdf/1612.00593.pdf)
+- [R. Q. Charles, et al.: PointNet++: Deep Hierarchical Feature Learning on Point Sets in a Metric Space, 2017](https://arxiv.org/pdf/1706.02413.pdf)
