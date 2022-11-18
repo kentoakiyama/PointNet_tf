@@ -31,6 +31,8 @@ class PointNet(tf.keras.Model):
 
         self.maxpooling1 = tf.keras.layers.MaxPooling1D(num_points)
 
+        self.dropout = tf.keras.layers.Dropout(0.4)
+
         self.flatten = tf.keras.layers.Flatten()
 
     def call(self, input):
@@ -54,6 +56,7 @@ class PointNet(tf.keras.Model):
     
         out = self.nonlinear6(out)
         out = self.nonlinear7(out)
+        out = self.dropout(out)
         return self.softmax(self.dense(out))
 
 
