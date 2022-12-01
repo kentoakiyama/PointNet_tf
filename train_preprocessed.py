@@ -1,10 +1,11 @@
 import os
 os.environ['PYTHONHASHSEED'] = '0'
-import numpy as np
 import random
+import argparse
+import numpy as np
 import tensorflow as tf
 from logging import getLogger, Formatter, DEBUG, StreamHandler
-import argparse
+
 from pointnet.pointnet import PointNet
 from examples.dataloader import ModelNetDataLoaderProccessed
 

@@ -64,8 +64,8 @@ class PointNetSeg(tf.keras.Model):
 
         self.num_points = num_points
 
-        self.input_tnet = TNet(num_points=num_points, k=3, activation=activation)
-        self.feature_tnet = TNet(num_points=num_points, k=64, activation=activation)
+        self.input_tnet = TNet(k=3, activation=activation)
+        self.feature_tnet = TNet(k=64, activation=activation)
 
         self.nonlinear1 = NonLinear(64, activation=activation, shared=True, batchnormalization=batchnormalization)
         self.nonlinear2 = NonLinear(64, activation=activation, shared=True, batchnormalization=batchnormalization)

@@ -22,7 +22,8 @@ class TNet(tf.keras.Model):
         self.maxpooling1 = tf.keras.layers.GlobalMaxPooling1D()
         
         if regularizer:
-            self.dense = tf.keras.layers.Dense(k**2, kernel_initializer='zeros', bias_initializer=initializer, activity_regularizer=OrthogonalReguralizer(k, reg_weight=0.001))
+            orthogonal_reguralizer = OrthogonalReguralizer(k, reg_weight=0.001)
+            self.dense = tf.keras.layers.Dense(k**2, kernel_initializer='zeros', bias_initializer=initializer, activity_regularizer=orthogonal_reguralizer)
         else:
             self.dense = tf.keras.layers.Dense(k**2, kernel_initializer='zeros', bias_initializer=initializer)
 
