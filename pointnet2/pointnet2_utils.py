@@ -61,12 +61,12 @@ def query_ball_point(radius, n_samples, xyz, cent_xyz):
     xyz = tf.reshape(xyz, [B, 1, N, D])
     cent_xyz = tf.reshape(cent_xyz, [B, n, 1, D])
     dist = tf.math.reduce_euclidean_norm(tf.tile(xyz, [1, n, 1, 1]) - cent_xyz, axis=3)
-    r_mask = tf.ones([B, D, N]) * radius**2
+    r_mask = tf.ones([B, n, N]) * radius**2
     dist = tf.math.minimum(dist, r_mask)
     return tf.argsort(dist)[:, :, :n_samples]
 
 
-def sample_and_group(xyz, n_points, n_samples, radius):
+def sample_and_group(xyz: tf.Tensor, n_points: int, n_samples: int, radius: float, points: tf.Tensor=None):
     """
     xyz: [B, N, D]
     n_points:
@@ -74,37 +74,70 @@ def sample_and_group(xyz, n_points, n_samples, radius):
     radius:
 
     return:
-        [B, n_points, n_samples, D]
+        [[B, n_samples, 3], [B, n_points, n_samples, D]]
     """
     cent_idx = fathest_point_sampling(xyz, n_points)
     cent_xyz = get_point_from_idx(xyz, cent_idx)
 
     group_idx = query_ball_point(radius, n_samples, xyz, cent_xyz)
     group_xyz = get_point_from_idx(xyz, group_idx)
-    return group_xyz
+    
+    if points is not None:
+        group_points = get_point_from_idx(points, group_idx)
+        new_points = tf.concat([group_xyz, group_points], axis=-1)
+    else:
+        new_points = group_xyz
+    return cent_xyz, new_points
+
+def sample_and_group_all(xyz: tf.Tensor, points: tf.Tensor=None):
+    """
+    xyz: [B, N, C]
+    points: [B, N, D]
+
+    return:
+        [[B, n_samples, 3], [B, n_points, n_samples, D]]
+    """
+    B, N, C = xyz.shape
+
+    new_xyz = tf.zeros([B, 1, C])
+    grouped_xyz = tf.reshape(xyz, [B, 1, N, C])
+    if points is not None:
+        points = tf.reshape(points, [B, 1, N, -1])
+        new_points = tf.concat([grouped_xyz, points], axis=-1)
+    else:
+        new_points = grouped_xyz
+
+    return new_xyz, new_points
 
 
 class SetAbstraction(tf.keras.Model):
-    def __init__(self, n_points: int, n_samples: int, radius: float, mlps, activation: str='relu', batchnormalization: bool=True):
+    def __init__(self, n_points: int, n_samples: int, radius: float, mlps, activation: str='relu', batchnormalization: bool=True, group_all: bool=False):
         super(SetAbstraction, self).__init__()
         self.n_points = n_points
         self.n_samples = n_samples
         self.radius = radius
+        self.group_all = group_all
         self.mlp_layers = []
         for mlp in mlps:
             self.mlp_layers.append(NonLinear(mlp, activation, batchnormalization=batchnormalization))
     
-    def call(self, inputs):
+    def call(self, xyz, points):
         """
-        inputs: tensor [B, N, D]
+        xyz: tensor [B, N, 3]
+        points: tensor [B, N, D]
         
         return:
+            [B, n_point, 3]
             [B, n_point, D]
         """
-        group_xyz = sample_and_group(inputs, self.n_points, self.n_samples, self.radius)
+
+        if self.group_all:
+            group_xyz, group_points = sample_and_group_all(xyz, points)
+        else:
+            group_xyz, group_points = sample_and_group(xyz, self.n_points, self.n_samples, self.radius, points)
 
         for mlp in self.mlp_layers:
-            group_xyz = mlp(group_xyz)
+            group_points = mlp(group_points)
 
-        group_xyz = tf.reduce_max(group_xyz, axis=2)
-        return group_xyz
+        group_points = tf.reduce_max(group_points, axis=2)
+        return group_xyz, group_points
