@@ -8,9 +8,9 @@ class PointNetClsSSG(tf.model.Model):
     def __init__(self, activation: str='relu', batchnormalization: bool=True):
         super(PointNetClsSSG, self).__init__()
         
-        self.sa1 = SetAbstraction(n_points=128, n_samples=128, radius=0.2, mlps=[128, 128], activation=activation, batchnormalization=batchnormalization)
-        self.sa2 = SetAbstraction(n_points=128, n_samples=128, radius=0.2, mlps=[128, 128], activation=activation, batchnormalization=batchnormalization)
-        self.sa3 = SetAbstraction(n_points=None, n_samples=None, radius=None, mlps=[128, 128], activation=activation, batchnormalization=batchnormalization)
+        self.sa1 = SetAbstraction(n_points=128, n_samples=128, radius=0.2, mlps=[128, 128], activation=activation, group_all=False, batchnormalization=batchnormalization)
+        self.sa2 = SetAbstraction(n_points=128, n_samples=128, radius=0.2, mlps=[128, 128], activation=activation, group_all=False, batchnormalization=batchnormalization)
+        self.sa3 = SetAbstraction(n_points=None, n_samples=None, radius=None, mlps=[128, 128], activation=activation, group_all=True, batchnormalization=batchnormalization)
 
         self.nonlinear1 = NonLinear(num_out=128, activation=activation, shared=True, batchnormalization=batchnormalization)
         self.nonlinear2 = NonLinear(num_out=128, activation=activation, shared=True, batchnormalization=batchnormalization)
