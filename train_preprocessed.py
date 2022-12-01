@@ -1,6 +1,10 @@
+import os
+os.environ['PYTHONHASHSEED'] = '0'
+import numpy as np
+import random
 import tensorflow as tf
 from logging import getLogger, Formatter, DEBUG, StreamHandler
-
+import argparse
 from pointnet.pointnet import PointNet
 from examples.dataloader import ModelNetDataLoaderProccessed
 
@@ -28,22 +32,14 @@ def custom_logger(name):
     logger.addHandler(handler)
     return logger
 
-
-def main():
+def reset_random_seeds(seed):
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+  
+def main(data_dir: str, classes: int, batch_size: int, num_points: int, activation: str, epochs: int, init_lr: float, decay_steps: float, decay_rate: float, seed: int):
     logger = custom_logger(__name__)
-    root_dir = r"D:\Projects\deeplearning\PointNet_tf\data\modelnet40_normal_resampled"
     
-    seed = 0
-    classes = 40
-    batch_size = 32
-    num_points = 1024
-    activation = 'relu'
-    epochs = 300
-    init_lr = 1e-3
-    decay_steps = 100000
-    decay_rate = 0.7
-
-
     logger.info('Start training!!')
     logger.info('Setting')
     logger.info(f'seed: {seed}')
@@ -55,10 +51,13 @@ def main():
     logger.info(f'decay steps: {decay_steps}')
     logger.info(f'decay rate: {decay_rate}')
 
+    # set seed
+    reset_random_seeds(seed)
+
     # -------------------------------------------------------------------------------------
     # generating the dataset
-    train_gen = ModelNetDataLoaderProccessed(root_dir, split='train', classes=classes, batch_size=batch_size, num_points=num_points, augment=False)
-    test_gen = ModelNetDataLoaderProccessed(root_dir, split='test', classes=classes, batch_size=batch_size, num_points=num_points, augment=False)
+    train_gen = ModelNetDataLoaderProccessed(data_dir, split='train', classes=classes, batch_size=batch_size, num_points=num_points, augment=True)
+    test_gen = ModelNetDataLoaderProccessed(data_dir, split='test', classes=classes, batch_size=batch_size, num_points=num_points, augment=False)
     
     logger.info(f'Number of labels: {len(train_gen.labels)}')
     logger.info(f'Training size: {len(train_gen.file_pattern)}')
@@ -69,12 +68,14 @@ def main():
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
         init_lr, decay_steps, decay_rate, staircase=True, name=None
     )
-    model = PointNet(num_points, len(train_gen.labels), activation)
+    model = PointNet(len(train_gen.labels), activation)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss='categorical_crossentropy', metrics=['accuracy'])
 
     model.fit(x=train_gen,
               epochs=epochs,
               steps_per_epoch=len(train_gen),
+              validation_data=test_gen,
+              validation_steps=len(test_gen),
               workers=6,
               max_queue_size=40)
     
@@ -86,7 +87,31 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('data_dir', type=str)
+    parser.add_argument('--classes', type=int, default=40)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--num_points', type=int, default=1024)
+    parser.add_argument('--activation', type=str, default='relu')
+    parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--init_lr', type=str, default=1e-3)
+    parser.add_argument('--decay_steps', type=str, default=10000)
+    parser.add_argument('--decay_rate', type=str, default=0.7)
+    parser.add_argument('--seed', type=int, default=0)
+
+    args = parser.parse_args()
+  
+    main(args.data_dir,
+         args.classes,
+         args.batch_size,
+         args.num_points,
+         args.activation,
+         args.epochs,
+         args.init_lr,
+         args.decay_steps,
+         args.decay_rate,
+         args.seed)
 
 
     
