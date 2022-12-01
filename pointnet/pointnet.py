@@ -53,7 +53,7 @@ class PointNet(tf.keras.Model):
 
 
 class PointNetSeg(tf.keras.Model):
-    def __init__(self, num_points: int, num_out: int, activation: str='relu', out_activation: str='softmax', batchnormalization:bool=True):
+    def __init__(self, num_out: int, activation: str='relu', out_activation: str='softmax', batchnormalization:bool=True):
         '''
         num_points: number of nodes
         num_out: number of output columns (if 10 class classification, num_out => 10)
@@ -61,8 +61,6 @@ class PointNetSeg(tf.keras.Model):
         out_activation: ['sigmoid', 'softmax', 'linear']
         '''
         super(PointNetSeg, self).__init__()
-
-        self.num_points = num_points
 
         self.input_tnet = TNet(k=3, activation=activation)
         self.feature_tnet = TNet(k=64, activation=activation)
@@ -81,9 +79,10 @@ class PointNetSeg(tf.keras.Model):
 
         self.softmax = tf.keras.layers.Activation(out_activation)
 
-        self.maxpooling1 = tf.keras.layers.MaxPooling1D(num_points)
+        self.maxpooling1 = tf.keras.layers.GlobalMaxPooling1D()
 
     def call(self, input):
+        B, N, D = input.shape
         # input transform
         matrix3 = self.input_tnet(input)
         out = tf.matmul(input, matrix3)
@@ -102,7 +101,8 @@ class PointNetSeg(tf.keras.Model):
         out = self.maxpooling1(out)
         
         # segmentation network
-        out = tf.tile(out, [1, self.num_points, 1])
+        out = tf.reshape(out, [B, 1, -1])
+        out = tf.tile(out, [1, N, 1])
         out = tf.concat([out, f_out], axis=2)
 
         out = self.nonlinear6(out)

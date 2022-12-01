@@ -23,7 +23,7 @@ There are two models, one is for classification and the other is for segmentatio
 
 ```python
 # classification task
-model = PointNet(num_points, num_out, activation, out_activation, batchnormalization=True)
+model = PointNet(num_out, activation, out_activation, batchnormalization=True)
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 history = model.fit(x=train_gen,
@@ -34,7 +34,7 @@ history = model.fit(x=train_gen,
 ```
 ```python
 # segmentation task
-model = PointNetSeg(num_points, num_out, activation, out_activation, batchnormalization=True)
+model = PointNetSeg(num_out, activation, out_activation, batchnormalization=True)
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 history = model.fit(x=train_gen,
@@ -46,11 +46,10 @@ history = model.fit(x=train_gen,
 
 You have five options for training.
 
-- num_points: number of points input to network (1024 in original paper)
-- num_out: number of output (if ModelNet10, num_out is 10)
-- activation: activation function
-- out_activation: activation function for output layer (You can choose in 'softmax', 'sigmoid', and 'linear'.)
-- batchnormalization: True or False (default: True)
+- `num_out`: number of output (if ModelNet10, num_out is 10)
+- `activation`: activation function
+- `out_activation`: activation function for output layer (You can choose in 'softmax', 'sigmoid', and 'linear'.)
+- `batchnormalization`: True or False (default: True)
 
 
 ### PointNet++
