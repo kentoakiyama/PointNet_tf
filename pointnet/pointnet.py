@@ -5,36 +5,30 @@ from utils.layers import NonLinear
 
 
 class PointNet(tf.keras.Model):
-    def __init__(self, num_points: int, num_out: int, activation: str='relu', out_activation: str='softmax', batchnormalization:bool=True):
+    def __init__(self, num_out: int, activation: str='relu', out_activation: str='softmax', batchnormalization:bool=True):
         '''
-        num_points: number of nodes
         num_out: number of output columns (if 10 class classification, num_out => 10)
         activation: ['relu', 'elu', 'selu', 'sigmoid', 'hard_sigmoid', 'softplux', 'softmax', 'tanh', 'linear']
         out_activation: ['sigmoid', 'softmax', 'linear'] if classification task, out_activation => ['sigmoid', 'softmax'], elif regression => 'linear'
         '''
         super(PointNet, self).__init__()
 
-        self.input_tnet = TNet(num_points=num_points, k=3, activation=activation)
-        self.feature_tnet = TNet(num_points=num_points, k=64, activation=activation)
+        self.input_tnet = TNet(k=3, activation=activation)
+        self.feature_tnet = TNet(k=64, activation=activation, regularizer=True)
         
         self.nonlinear1 = NonLinear(64, activation=activation, shared=True, batchnormalization=batchnormalization)
         self.nonlinear2 = NonLinear(64, activation=activation, shared=True, batchnormalization=batchnormalization)
         self.nonlinear3 = NonLinear(64, activation=activation, shared=True, batchnormalization=batchnormalization)
         self.nonlinear4 = NonLinear(128, activation=activation, shared=True, batchnormalization=batchnormalization)
         self.nonlinear5 = NonLinear(1024, activation=activation, shared=True, batchnormalization=batchnormalization)
-        self.nonlinear6 = NonLinear(512, activation=activation, shared=False, batchnormalization=batchnormalization)
-        self.nonlinear7 = NonLinear(256, activation=activation, shared=False, batchnormalization=batchnormalization)
+        self.nonlinear6 = NonLinear(512, activation=activation, shared=False, batchnormalization=batchnormalization, dropout_rate=0.3)
+        self.nonlinear7 = NonLinear(256, activation=activation, shared=False, batchnormalization=batchnormalization, dropout_rate=0.3)
+
+        self.maxpooling1 = tf.keras.layers.GlobalMaxPooling1D()
 
         self.dense = tf.keras.layers.Dense(num_out)
-
-        self.softmax = tf.keras.layers.Activation(out_activation)
-
-        self.maxpooling1 = tf.keras.layers.MaxPooling1D(num_points)
-
-        self.dropout = tf.keras.layers.Dropout(0.4)
-
-        self.flatten = tf.keras.layers.Flatten()
-
+        self.activation = tf.keras.layers.Activation(out_activation)
+    
     def call(self, input):
         # input transform
         matrix3 = self.input_tnet(input)
@@ -52,12 +46,10 @@ class PointNet(tf.keras.Model):
         out = self.nonlinear5(out)
 
         out = self.maxpooling1(out)
-        out = self.flatten(out)
     
         out = self.nonlinear6(out)
         out = self.nonlinear7(out)
-        out = self.dropout(out)
-        return self.softmax(self.dense(out))
+        return self.activation(self.dense(out))
 
 
 class PointNetSeg(tf.keras.Model):
