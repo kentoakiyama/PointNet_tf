@@ -82,7 +82,9 @@ class PointNetSeg(tf.keras.Model):
         self.maxpooling1 = tf.keras.layers.GlobalMaxPooling1D()
 
     def call(self, input):
-        B, N, D = input.shape
+        shapes = tf.shape(input)
+        B, N = shapes[0], shapes[1]
+
         # input transform
         matrix3 = self.input_tnet(input)
         out = tf.matmul(input, matrix3)
