@@ -1,5 +1,5 @@
 import os
-os.environ['PYTHONHASHSEED'] = '0'
+os.environ['PYTHONHAHSSEED'] = '0'
 import random
 import argparse
 import numpy as np
@@ -8,6 +8,9 @@ from logging import getLogger, Formatter, DEBUG, StreamHandler
 
 from pointnet.pointnet import PointNet
 from examples.dataloader import ModelNetDataLoaderProccessed
+
+os.environ['TF_DETERMINISTIC_OPS'] = 'true'
+os.environ['TF_CUDNN_DETERMINISTIC'] = 'true'
 
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
@@ -67,7 +70,7 @@ def main(data_dir: str, classes: int, batch_size: int, num_points: int, activati
     # -------------------------------------------------------------------------------------
     # training
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        init_lr, decay_steps, decay_rate, staircase=True, name=None
+        float(init_lr), int(decay_steps), float(decay_rate), staircase=True, name=None
     )
     model = PointNet(len(train_gen.labels), activation)
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss='categorical_crossentropy', metrics=['accuracy'])
@@ -80,6 +83,7 @@ def main(data_dir: str, classes: int, batch_size: int, num_points: int, activati
               workers=6,
               max_queue_size=40)
     
+
     training_scores = model.evaluate(train_gen)
     test_scores = model.evaluate(test_gen)
     
@@ -97,7 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--activation', type=str, default='relu')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--init_lr', type=str, default=1e-3)
-    parser.add_argument('--decay_steps', type=str, default=10000)
+    parser.add_argument('--decay_steps', type=str, default=1000)
     parser.add_argument('--decay_rate', type=str, default=0.7)
     parser.add_argument('--seed', type=int, default=0)
 

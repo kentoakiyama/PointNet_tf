@@ -28,7 +28,6 @@ class PointNetClsSSG(tf.keras.Model):
             points = None
         xyz, points = self.sa1(xyz, points)
         xyz, points = self.sa2(xyz, points)
-        print(xyz.shape, points.shape)
         xyz, points = self.sa3(xyz, points)
 
         x = self.nonlinear1(points)

@@ -200,7 +200,7 @@ class ModelNetDataLoaderProccessed(tf.keras.utils.Sequence):
             pointcloud = self._rotation(pointcloud)
 
             # jittering
-            pointcloud = self._jittering(pointcloud, sigma=0.02)
+            pointcloud = self._jittering(pointcloud)
         return pointcloud
 
     def _get_label(self, file_path):
