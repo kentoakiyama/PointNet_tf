@@ -7,10 +7,8 @@ import tensorflow as tf
 from logging import getLogger, Formatter, DEBUG, StreamHandler
 
 from pointnet.pointnet import PointNet
+from pointnet2.pointnet2_cls import PointNetClsSSG
 from examples.dataloader import ModelNetDataLoaderProccessed
-
-os.environ['TF_DETERMINISTIC_OPS'] = 'true'
-os.environ['TF_CUDNN_DETERMINISTIC'] = 'true'
 
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
@@ -41,11 +39,12 @@ def reset_random_seeds(seed):
     np.random.seed(seed)
     random.seed(seed)
   
-def main(data_dir: str, classes: int, batch_size: int, num_points: int, activation: str, epochs: int, init_lr: float, decay_steps: float, decay_rate: float, seed: int):
+def main(model_name: str, data_dir: str, classes: int, batch_size: int, num_points: int, activation: str, epochs: int, init_lr: float, decay_steps: float, decay_rate: float, seed: int):
     logger = custom_logger(__name__)
     
     logger.info('Start training!!')
     logger.info('Setting')
+    logger.info(f'Model: {model_name}')
     logger.info(f'seed: {seed}')
     logger.info(f'batch_size: {batch_size}')
     logger.info(f'num_points: {num_points}')
@@ -70,44 +69,58 @@ def main(data_dir: str, classes: int, batch_size: int, num_points: int, activati
     # -------------------------------------------------------------------------------------
     # training
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        float(init_lr), int(decay_steps), float(decay_rate), staircase=True, name=None
+        initial_learning_rate=float(init_lr),
+        decay_steps=int(decay_steps),
+        decay_rate=float(decay_rate),
+        staircase=True,
+        name=None
     )
-    model = PointNet(len(train_gen.labels), activation)
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr_schedule), loss='categorical_crossentropy', metrics=['accuracy'])
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+    checkpoint = tf.keras.callbacks.ModelCheckpoint('model', save_best_only=True, save_weights_only=False)
+
+    if model_name == 'pointnet':
+        model = PointNet(len(train_gen.labels), activation)
+    elif model_name == 'pointnet2ssg':
+        model = PointNetClsSSG(len(train_gen.labels), activation=activation)
+    
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
     model.fit(x=train_gen,
               epochs=epochs,
               steps_per_epoch=len(train_gen),
               validation_data=test_gen,
               validation_steps=len(test_gen),
+              callbacks=[checkpoint],
               workers=6,
               max_queue_size=40)
     
+    del model
 
-    training_scores = model.evaluate(train_gen)
+    model = tf.keras.models.load_model('model')
     test_scores = model.evaluate(test_gen)
     
-    logger.info(f'Training accuracy  : {training_scores[1]:.4f}')
-    logger.info(f'Test accuracy      : {test_scores[1]:.4f}')
+    logger.info(f'Test accuracy: {test_scores[1]:.4f}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
     parser.add_argument('data_dir', type=str)
+    parser.add_argument('--model', type=str, default='pointnet')
     parser.add_argument('--classes', type=int, default=40)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--num_points', type=int, default=1024)
     parser.add_argument('--activation', type=str, default='relu')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('--init_lr', type=str, default=1e-3)
-    parser.add_argument('--decay_steps', type=str, default=1000)
+    parser.add_argument('--decay_steps', type=str, default=10000)
     parser.add_argument('--decay_rate', type=str, default=0.7)
     parser.add_argument('--seed', type=int, default=0)
 
     args = parser.parse_args()
   
-    main(args.data_dir,
+    main(args.model,
+         args.data_dir,
          args.classes,
          args.batch_size,
          args.num_points,
