@@ -7,6 +7,7 @@ from utils.layers import NonLinear
 class PointNetClsSSG(tf.keras.Model):
     def __init__(self, num_out: int, activation: str='relu', out_activation: str='softmax', batchnormalization: bool=True):
         super(PointNetClsSSG, self).__init__()
+        self.num_out = num_out
         
         self.sa1 = SetAbstraction(n_points=128, n_samples=128, radius=0.2, mlps=[64, 64, 128], activation=activation, group_all=False, batchnormalization=batchnormalization)
         self.sa2 = SetAbstraction(n_points=128, n_samples=128, radius=0.2, mlps=[128, 128, 256], activation=activation, group_all=False, batchnormalization=batchnormalization)
@@ -19,17 +20,24 @@ class PointNetClsSSG(tf.keras.Model):
         self.activation = tf.keras.layers.Activation(out_activation)
 
     def call(self, inputs):
-        B, N, D = inputs.shape
-        if D > 3:
+        """
+        inputs: [B, N, D]
+        """
+        inputs_shape = tf.shape(inputs)
+        B = inputs_shape[0]
+
+        if tf.shape(inputs)[-1] > 3:
             xyz = inputs[:, :, :3]
             points = inputs[:, :, 3:]
         else:
-            xyz = inputs
-            points = None
+            xyz = inputs[:, :, :3]
+            points = inputs[:, :, :3]
         xyz, points = self.sa1(xyz, points)
         xyz, points = self.sa2(xyz, points)
         xyz, points = self.sa3(xyz, points)
 
         x = self.nonlinear1(points)
         x = self.nonlinear2(x)
-        return self.activation(self.dense(x))
+        x = self.dense(x)
+        x = tf.reshape(x, [B, self.num_out])
+        return self.activation(x)
