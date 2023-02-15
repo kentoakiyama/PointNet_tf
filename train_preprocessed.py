@@ -76,7 +76,12 @@ def main(model_name: str, data_dir: str, classes: int, batch_size: int, num_poin
         name=None
     )
     optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-    checkpoint = tf.keras.callbacks.ModelCheckpoint('model', save_best_only=True, save_weights_only=False)
+    checkpoint = tf.keras.callbacks.ModelCheckpoint('model',
+                                                    monitor='val_accuracy',
+                                                    save_best_only=True,
+                                                    save_weights_only=False,
+                                                    mode='max',
+                                                    verbose=1)
 
     if model_name == 'pointnet':
         model = PointNet(len(train_gen.labels), activation)
